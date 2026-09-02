@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roamola — Coming soon</title>
+<meta name="description" content="Roamola is a home for Sri Lanka's best routes, hidden spots and honest travel stories — from Colombo's street food to sunrise over Ella. Launching soon.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF9F2; --paper:#FFFFFF; --sand:#FBF0E2;
+    --line:#F0DFC8;
+    --coral:#FF9B54; --ember:#E85A3C;
+    --ink:#2B2117; --ink-soft:#6B5C4C; --ink-faint:#A8977F;
+    --display:'Fraunces',Georgia,serif;
+    --body:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--cream);color:var(--ink);font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;min-height:100vh;
+    background-image:
+      radial-gradient(720px 440px at 8% -10%, rgba(255,155,84,.16), transparent 60%),
+      radial-gradient(560px 380px at 100% 0%, rgba(232,90,60,.09), transparent 65%);
+  }
+  a{color:inherit}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;width:100%}
+
+  header{padding:28px 0 0}
+  .brand{display:flex;align-items:center;gap:10px}
+  .mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--coral),var(--ember));display:grid;place-items:center;flex:none}
+  .mark svg{width:17px;height:17px}
+  .wordmark{font-family:var(--display);font-weight:600;font-style:italic;font-size:19px;letter-spacing:-.01em}
+
+  main{flex:1;display:flex;align-items:center;padding:52px 0 40px}
+  .stage{width:100%}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;font-family:var(--body);font-weight:600;font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ember);
+    border:1px solid rgba(232,90,60,.25);background:rgba(255,155,84,.1);
+    padding:6px 13px;border-radius:999px;margin-bottom:24px;
+  }
+  .eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--ember);display:inline-block;
+    box-shadow:0 0 0 0 rgba(232,90,60,.5);animation:pulse 2.2s infinite}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(232,90,60,.4)}
+    70%{box-shadow:0 0 0 8px rgba(232,90,60,0)}
+    100%{box-shadow:0 0 0 0 rgba(232,90,60,0)}
+  }
+
+  h1{
+    font-family:var(--display);font-weight:600;letter-spacing:-.01em;
+    font-size:clamp(32px,5.6vw,52px);line-height:1.12;margin:0 0 20px;
+  }
+  h1 em{color:var(--ember);font-style:italic}
+
+  p.lead{
+    color:var(--ink-soft);font-size:16.5px;line-height:1.7;max-width:560px;margin:0 0 34px;
+  }
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:38px}
+  .chip{
+    font-family:var(--body);font-weight:500;font-size:12.5px;color:var(--ink-soft);
+    border:1px solid var(--line);background:var(--paper);
+    padding:7px 13px;border-radius:999px;
+  }
+  .chip b{color:var(--ember);font-weight:700}
+
+  .cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .btn{
+    font-family:var(--body);font-weight:600;font-size:14.5px;
+    padding:13px 22px;border-radius:8px;text-decoration:none;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn.pri{background:linear-gradient(135deg,var(--coral),var(--ember));color:#fff;box-shadow:0 10px 26px -10px rgba(232,90,60,.55)}
+  .btn.gho{border:1px solid var(--line);color:var(--ink);background:var(--paper)}
+  .btn.pri:hover{filter:brightness(1.05)}
+  .btn.gho:hover{border-color:var(--coral)}
+
+  footer{
+    border-top:1px solid var(--line);padding:20px 0 26px;
+  }
+  .footrow{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+    font-family:var(--body);font-size:12px;color:var(--ink-faint);
+  }
+
+  @media (max-width:480px){
+    .footrow{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+  <header class="wrap">
+    <div class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 19c4-11 8-14 16-15-3 7-7 12-16 15Z" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="17.5" cy="6.5" r="1.4" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="wordmark">Roamola</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="stage">
+      <span class="eyebrow"><i></i> Coming soon</span>
+
+      <h1>Sri Lanka, <em>one story</em><br>at a time.</h1>
+
+      <p class="lead">
+        Roamola is a home for the island's best routes, hidden spots and honest travel stories —
+        from Colombo's street food stalls to sunrise over Ella. Built for people planning their
+        next trip, and written by people who've already made it.
+      </p>
+
+      <div class="chips">
+        <div class="chip"><b>Guides</b> — routes &amp; itineraries</div>
+        <div class="chip"><b>Stories</b> — real trips, real photos</div>
+        <div class="chip"><b>Sri Lanka</b> — every province</div>
+      </div>
+
+      <div class="cta">
+        <a class="btn pri" href="mailto:zinergeco@gmail.com?subject=Roamola%20early%20access">Get early access</a>
+        <a class="btn gho" href="mailto:zinergeco@gmail.com?subject=Roamola%20-%20say%20hello">Say hello</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="wrap">
+    <div class="footrow">
+      <span>© <span id="y"></span> Roamola · a Zinerge product</span>
+      <span>roamola.com</span>
+    </div>
+  </footer>
+
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
