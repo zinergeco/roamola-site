@@ -5,11 +5,19 @@ the master plan / UI plan for the why and the what.
 
 ## Status
 
-M1 scaffold only. Not deployed anywhere. Not pushed to any repo yet — see
-`docs/DECISIONS.md` for what has to be decided before it can be.
+**Live at roamola.com**, behind the dev-gate password (see below) — this
+replaced the coming-soon page 2026-09-14. What's live is the M1
+build-status dashboard in `apps/web`, not the data-backed platform; see
+`docs/DECISIONS.md` for the full cutover note and a bug found and fixed
+right after the first deploy.
 
 What exists:
 
+- `apps/web` — a real, running, password-gated Next.js app
+  (`middleware.ts` + `/login` + `/api/login`), deployed on Coolify via the
+  same Dockerfile-build-on-push pipeline the old coming-soon page used.
+  Home page is an honest, hand-maintained milestone-status dashboard, not
+  placeholder content.
 - `packages/db/src/schema.ts` — the full Postgres schema from BUILD.md §4,
   in corrected table-creation order (the source doc has a forward-reference
   bug; see `docs/DECISIONS.md` #1).
@@ -25,12 +33,12 @@ What exists:
 - `docs/SOURCES.md`, `docs/TEMPLATES.md`, `docs/METHODOLOGY.md` — stubs to
   fill in as the corresponding milestones land.
 - `docker-compose.yml` — self-hosted Postgres+PostGIS/Redis/ClickHouse/
-  Typesense, for local dev and as the default assumption for prod (pending
-  confirmation — see decisions doc).
+  Typesense, for local dev; not yet provisioned in Coolify for prod.
 
-What doesn't exist yet: any actual Next.js app code beyond package.json and
-a route map (`apps/web/ROUTES.md`), any pipeline connector, any real
-source data, any deployed infrastructure.
+What doesn't exist yet: a database connected in production (Postgres/Redis/
+ClickHouse/Typesense aren't provisioned in Coolify yet), any pipeline
+connector, any real source data, real auth (still the shared dev-gate
+password, not Auth.js).
 
 ## Local dev (once decisions are confirmed and deps installed)
 
