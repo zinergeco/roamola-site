@@ -1,0 +1,20 @@
+{
+  "name": "roamola",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "pnpm --filter @roamola/web dev",
+    "dev:admin": "pnpm --filter @roamola/admin dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @roamola/db migrate",
+    "db:seed": "pnpm --filter @roamola/db seed",
+    "db:studio": "pnpm --filter @roamola/db studio"
+  }
+}
