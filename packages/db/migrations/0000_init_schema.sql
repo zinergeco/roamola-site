@@ -73,8 +73,8 @@ CREATE TABLE IF NOT EXISTS "place" (
 	"country_code" text NOT NULL,
 	"timezone" text NOT NULL,
 	"population" bigint,
-	"centroid" "geography(Point, 4326)" NOT NULL,
-	"boundary" "geography(MultiPolygon, 4326)",
+	"centroid" geography(Point, 4326) NOT NULL,
+	"boundary" geography(MultiPolygon, 4326),
 	"source_id" integer NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "property" (
 	"name" text NOT NULL,
 	"capacity" integer,
 	"attributes" jsonb DEFAULT '{}'::jsonb NOT NULL,
-	"location" "geography(Point, 4326)",
+	"location" geography(Point, 4326),
 	"operator_id" bigint,
 	"verified_at" timestamp with time zone,
 	"external_ids" jsonb DEFAULT '{}'::jsonb NOT NULL,

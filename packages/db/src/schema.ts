@@ -46,6 +46,18 @@ import {
 // ---------------------------------------------------------------------------
 // PostGIS geography columns. Drizzle has no native geography type, so these
 // are thin customType wrappers -- see BUILD.md §1, "geography is first-class".
+//
+// KNOWN DRIZZLE-KIT BUG: `drizzle-kit generate` renders this customType's
+// dataType() string as a double-quoted identifier in the emitted migration
+// SQL -- e.g. `"centroid" "geography(Point, 4326)" NOT NULL` -- which
+// Postgres parses as a single (nonexistent) quoted type name, not
+// `geography` with type modifiers. This broke the very first production
+// migration (found live, M1 incident 2026-09-14: `type "geography(Point,
+// 4326)" does not exist`). The snapshot JSON in migrations/meta/ stores the
+// type correctly unquoted; only the generated .sql is wrong. If you ever
+// run `drizzle-kit generate` again after changing this schema, check the
+// new migration's CREATE TABLE statements for stray quotes around any
+// `geography(...)` column and strip them by hand before applying.
 // ---------------------------------------------------------------------------
 function geography(subtype: "Point" | "MultiPolygon") {
   return customType<{ data: string }>({
