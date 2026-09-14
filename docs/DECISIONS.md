@@ -98,6 +98,44 @@ login protected page." The password lives in the local `.env` (gitignored,
 never committed) and was shared with Zinerge directly in chat, not filed
 anywhere written to disk or memory.
 
+6. **M1 completed (2026-09-14).** Postgres+PostGIS, Redis and ClickHouse are
+   now provisioned as Coolify resources in the same `Roamola` project as
+   `roamola-site`, on the same internal Docker network (`coolify`) --
+   reachable by service hostname, not exposed publicly. `DATABASE_URL`,
+   `CLICKHOUSE_URL`/`_USER`/`_PASSWORD`/`_DATABASE` and `REDIS_URL` are set
+   as production env vars on the app. `packages/db/migrations/` now holds
+   two real migrations generated from `schema.ts` (`0000_init_schema.sql`,
+   with `CREATE EXTENSION IF NOT EXISTS postgis` prepended -- Drizzle has no
+   notion of extensions, and the geography columns need it before they can
+   be created) and `0001_append_only_signal.sql` (the trigger + the two
+   CHAR(2) fixes, folded in from the old hand-written stub). Both run on
+   every container start via `scripts/container-init.mjs`
+   (`drizzle-kit migrate`, then an idempotent ClickHouse
+   `CREATE TABLE IF NOT EXISTS event`), ahead of `next start` -- see the
+   Dockerfile.
+
+   The admin shell (BUILD.md's "admin app shell with the kill switch
+   working") lives at `/admin` inside `apps/web`, behind the existing dev
+   password, rather than as the separately-specified `apps/admin` app on
+   its own port/subdomain. That second app is scaffolded
+   (`apps/admin/package.json`) but deliberately not stood up yet --
+   splitting it means a second Coolify resource, a second domain, and a
+   second deploy pipeline for a shell that right now needs three pages and
+   zero real users. Revisit once there's an actual reason (real staff
+   accounts, M4) to pull it out.
+
+   `/admin/system-check` runs BUILD.md §15's own M1 acceptance test, live,
+   on demand: insert a place, attach a signal, attempt to update that
+   signal (expected to fail -- the trigger rejecting it is the pass
+   condition), fire a ClickHouse event and read it back. `/admin/kill-switch`
+   implements BUILD.md §12's single-transaction status change
+   (published/draft → noindexed/removed) against the real `page` table;
+   since M3 hasn't built the first template yet, there are no real pages to
+   act on, so the page can create one clearly-marked fixture row to test
+   against. "Strip inbound internal links" and the optional 301 from §12
+   are content-graph operations against real templates -- not implemented,
+   and the admin UI says so rather than faking it.
+
 ## Not blocking, just noted
 
 - `GENERATION_ENABLED` and `PUBLISH_ENABLED` default `false` everywhere,

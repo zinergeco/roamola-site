@@ -35,6 +35,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@roamola/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
       '@roamola/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -44,6 +47,9 @@ importers:
       '@roamola/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      drizzle-orm:
+        specifier: ^0.36.0
+        version: 0.36.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
       next:
         specifier: ^15.0.0
         version: 15.5.25(@types/node@20.19.43)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

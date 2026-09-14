@@ -6,10 +6,13 @@ the master plan / UI plan for the why and the what.
 ## Status
 
 **Live at roamola.com**, behind the dev-gate password (see below) — this
-replaced the coming-soon page 2026-09-14. What's live is the M1
-build-status dashboard in `apps/web`, not the data-backed platform; see
-`docs/DECISIONS.md` for the full cutover note and a bug found and fixed
-right after the first deploy.
+replaced the coming-soon page 2026-09-14. **M1 (BUILD.md §15) is complete**
+as of the same day: real Postgres+PostGIS, Redis and ClickHouse are
+provisioned in Coolify and wired up, the schema is migrated, the admin
+shell and kill switch are live, and event capture is writing to
+ClickHouse. See `docs/DECISIONS.md` for the full cutover note, the M1
+completion note, and a redirect bug found and fixed right after the first
+deploy.
 
 What exists:
 
@@ -18,27 +21,39 @@ What exists:
   same Dockerfile-build-on-push pipeline the old coming-soon page used.
   Home page is an honest, hand-maintained milestone-status dashboard, not
   placeholder content.
-- `packages/db/src/schema.ts` — the full Postgres schema from BUILD.md §4,
-  in corrected table-creation order (the source doc has a forward-reference
-  bug; see `docs/DECISIONS.md` #1).
+- `apps/web/app/admin` — the admin shell (`/admin` overview,
+  `/admin/system-check`, `/admin/kill-switch`), behind the same dev
+  password. `/admin/system-check` runs BUILD.md's own M1 acceptance test
+  live, on demand, against production Postgres and ClickHouse.
+  `/admin/kill-switch` is the single-transaction page-status action from
+  BUILD.md §12, minus the content-graph parts (link-stripping, 301) that
+  need real templates (M3) to exist first.
+- `packages/db/src/schema.ts` + `packages/db/migrations/` — the full
+  Postgres schema from BUILD.md §4 (corrected table order, see
+  `docs/DECISIONS.md` #1), now migrated into production, plus the
+  append-only trigger on `signal` and the PostGIS extension bootstrap.
+  Migrations run automatically on every container start
+  (`scripts/container-init.mjs`).
+- `packages/analytics/src/clickhouse.ts` — the ClickHouse HTTP-interface
+  writer behind `/api/events` and the system-check page; the `event` table
+  is created (idempotently) on every container start too.
 - `packages/generation/` — the template-definition type, the reference
   `destination` template, and the LLM-service contract (unimplemented
   stubs past the type signatures — the actual prompt/validation logic is
   M3 work, once there's real data to generate from).
-- `packages/analytics/src/events.ts` — the event schema, ready to wire up
-  before any traffic exists, per BUILD.md §10.
 - `packages/core/src/entitlements.ts` — the plan/entitlement table.
 - `services/pipelines/` — Python/Prefect flow stubs (`ingest.py`,
   `validate.py`); the rest of the nine flows aren't started.
 - `docs/SOURCES.md`, `docs/TEMPLATES.md`, `docs/METHODOLOGY.md` — stubs to
   fill in as the corresponding milestones land.
-- `docker-compose.yml` — self-hosted Postgres+PostGIS/Redis/ClickHouse/
-  Typesense, for local dev; not yet provisioned in Coolify for prod.
+- `docker-compose.yml` — the same Postgres+PostGIS/Redis/ClickHouse/
+  Typesense stack for local dev (Typesense isn't provisioned in Coolify
+  yet — nothing needs on-site search before M3's templates exist).
 
-What doesn't exist yet: a database connected in production (Postgres/Redis/
-ClickHouse/Typesense aren't provisioned in Coolify yet), any pipeline
-connector, any real source data, real auth (still the shared dev-gate
-password, not Auth.js).
+What doesn't exist yet: any pipeline connector, any real source data
+(`docs/SOURCES.md` is still empty on purpose — market/source selection is
+M2 business work, not something to fabricate), real auth (still the shared
+dev-gate password, not Auth.js), and Typesense in production.
 
 ## Local dev (once decisions are confirmed and deps installed)
 

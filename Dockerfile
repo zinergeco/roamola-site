@@ -30,4 +30,9 @@ COPY --from=build /app /app
 
 WORKDIR /app/apps/web
 EXPOSE 80
-CMD ["pnpm", "exec", "next", "start", "-p", "80"]
+
+# scripts/container-init.mjs applies pending Postgres migrations and makes
+# sure the ClickHouse `event` table exists, then hands off to `next start`.
+# Both steps are idempotent, so this runs on every container start, not
+# just the first deploy -- see that file for why it's plain Node.
+CMD ["sh", "-c", "node /app/scripts/container-init.mjs && pnpm exec next start -p 80"]

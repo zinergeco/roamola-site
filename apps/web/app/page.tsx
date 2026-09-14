@@ -15,9 +15,9 @@ const milestones: Milestone[] = [
     id: "M1",
     weeks: "1–4",
     title: "Schema, event capture, admin shell, kill switch",
-    status: "in-progress",
+    status: "done",
     detail:
-      "DB schema (12 tables, corrected FK order) is written. Event schema and entitlements are transcribed from spec. This dev-gated app, admin shell, and kill switch are not built yet.",
+      "Postgres+PostGIS/Redis/ClickHouse provisioned in Coolify, schema migrated, append-only trigger enforced. Admin shell live at /admin (system check + kill switch). Event capture writing to ClickHouse. See docs/DECISIONS.md #6.",
   },
   {
     id: "M2",
@@ -66,7 +66,7 @@ const milestones: Milestone[] = [
 const decisionsConfirmed = [
   "Hosting: self-host everything on Coolify (Postgres+PostGIS, Redis, ClickHouse, Typesense, Next.js) on the existing OVHcloud box.",
   "Repo: replace zinergeco/roamola-site's contents in place, not a new repo.",
-  "Delivery: fine-grained GitHub PAT scoped to this repo (pending).",
+  "Delivery: fine-grained GitHub PAT scoped to this repo — used, via the linked device's shell (this sandbox's own git access is repo-gated independent of any PAT; see docs/DECISIONS.md #2).",
 ];
 
 const decisionsOpen = [
@@ -111,18 +111,27 @@ export default function HomePage() {
   return (
     <main style={{ maxWidth: 880, margin: "0 auto", padding: "3rem 1.5rem 5rem" }}>
       <header style={{ marginBottom: "2.5rem" }}>
-        <p
-          className="font-disp"
-          style={{
-            fontSize: ".72rem",
-            color: "var(--brass)",
-            letterSpacing: ".05em",
-            margin: "0 0 .6rem",
-            textTransform: "uppercase",
-          }}
-        >
-          Build status — not public
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+          <p
+            className="font-disp"
+            style={{
+              fontSize: ".72rem",
+              color: "var(--brass)",
+              letterSpacing: ".05em",
+              margin: "0 0 .6rem",
+              textTransform: "uppercase",
+            }}
+          >
+            Build status — not public
+          </p>
+          <a
+            href="/admin"
+            className="font-disp"
+            style={{ fontSize: ".78rem", color: "var(--mist)", textDecoration: "none", fontWeight: 600 }}
+          >
+            Admin →
+          </a>
+        </div>
         <h1 style={{ fontSize: "clamp(1.8rem,4vw,2.4rem)", fontWeight: 700, margin: "0 0 .8rem" }}>
           roamola<span style={{ color: "var(--brass-bright)" }}>.</span>
         </h1>
@@ -215,12 +224,15 @@ export default function HomePage() {
       </section>
 
       <section>
-        <h2 style={{ fontSize: "1.1rem", margin: "0 0 1rem" }}>Next up</h2>
+        <h2 style={{ fontSize: "1.1rem", margin: "0 0 1rem" }}>Next up — M2 (data spine)</h2>
         <ol style={{ color: "var(--mist)", fontSize: ".9rem", paddingLeft: "1.2rem" }}>
-          <li style={{ marginBottom: ".4rem" }}>Get the GitHub PAT and push this to a branch (not main).</li>
-          <li style={{ marginBottom: ".4rem" }}>Provision Postgres+PostGIS/Redis in Coolify and run the schema migration.</li>
-          <li style={{ marginBottom: ".4rem" }}>Build the admin shell and kill switch (rest of M1).</li>
-          <li>Only then merge to main and cut over the live coming-soon page.</li>
+          <li style={{ marginBottom: ".4rem" }}>
+            Choose 3–4 launch markets and populate <code>docs/SOURCES.md</code> —
+            business decision, not something to fabricate.
+          </li>
+          <li style={{ marginBottom: ".4rem" }}>Build the ingest/normalise/validate pipeline for geographic, regulatory and climate sources.</li>
+          <li style={{ marginBottom: ".4rem" }}>Raw snapshotting to S3, with replay proven by re-running a past date.</li>
+          <li>Anomaly detection that halts a deliberately poisoned test batch.</li>
         </ol>
       </section>
     </main>
