@@ -42,8 +42,15 @@ What exists:
   stubs past the type signatures — the actual prompt/validation logic is
   M3 work, once there's real data to generate from).
 - `packages/core/src/entitlements.ts` — the plan/entitlement table.
-- `services/pipelines/` — Python/Prefect flow stubs (`ingest.py`,
-  `validate.py`); the rest of the nine flows aren't started.
+- `services/pipelines/` — Python/Prefect. `ingest.py` and `validate.py`
+  are real now (raw-to-S3 snapshot, replay from a stored snapshot,
+  anomaly detection that halts a poisoned batch before it touches
+  Postgres) — see `services/pipelines/README.md`. Proven live against a
+  real Postgres+PostGIS instance and an S3-compatible store via
+  `scripts/m2_check.py`, BUILD.md's own M2 acceptance test. Only
+  connector is `test_fixture.py`, explicitly synthetic/not real — no
+  real source exists yet (see below). The rest of the nine flows aren't
+  started.
 - `docs/SOURCES.md`, `docs/TEMPLATES.md`, `docs/METHODOLOGY.md` — stubs to
   fill in as the corresponding milestones land.
 - `docker-compose.yml` — the same Postgres+PostGIS/Redis/ClickHouse/
@@ -68,5 +75,9 @@ pnpm db:migrate
 ## Build order
 
 Do not reorder — BUILD.md §15 explains why each milestone depends on the
-last. M1 = this commit's scope: schema + event capture + admin shell
-(admin shell not started) + kill switch (not started).
+last. M1 is complete and verified live (see `docs/DECISIONS.md`). M2 is
+in progress: the pipeline mechanics (ingest, snapshot, replay, anomaly
+blocking) are real and proven against real infra; the actual data-spine
+work — choosing launch markets, vetting and connecting real sources — has
+not started, on purpose (business decision, `docs/SOURCES.md` is still
+empty).

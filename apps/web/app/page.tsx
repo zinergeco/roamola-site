@@ -23,8 +23,9 @@ const milestones: Milestone[] = [
     id: "M2",
     weeks: "5–8",
     title: "Ingestion pipelines",
-    status: "not-started",
-    detail: "Python/Prefect flow stubs exist (ingest.py, validate.py); no real connector yet.",
+    status: "in-progress",
+    detail:
+      "ingest/validate are real now (S3 snapshot, replay, anomaly-blocking), proven against a real Postgres+S3-compatible stack -- see services/pipelines/README.md. Still no real connector: docs/SOURCES.md is empty until launch markets are chosen (business decision, not fabricated).",
   },
   {
     id: "M3",

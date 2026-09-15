@@ -136,6 +136,54 @@ anywhere written to disk or memory.
    are content-graph operations against real templates -- not implemented,
    and the admin UI says so rather than faking it.
 
+## M2 groundwork (2026-09-14, in progress)
+
+Real pipeline mechanics, not the launch-market/real-source work M2 also
+needs (that part is still untouched and still a business decision — see
+"Not blocking, just noted" below):
+
+- `services/pipelines/lib/snapshot.py` — raw-to-S3 (BUILD.md §8.1),
+  S3-compatible via boto3 against whatever `S3_ENDPOINT` points at.
+- `services/pipelines/lib/provenance.py` — the same find-or-create
+  pattern `admin/system-check/actions.ts` already proved live for M1,
+  reimplemented in psycopg (per BUILD.md §2's boundary: `services/*` and
+  `apps/web` never import from each other).
+- `services/pipelines/lib/anomaly.py` — the real, executable version of
+  the `ANOMALY_RULES` BUILD.md §8.3 defines; `flows/validate.py` keeps
+  the rule table verbatim as the spec-diffable source of truth and now
+  calls into this for real.
+- `services/pipelines/connectors/test_fixture.py` — a synthetic,
+  clearly-marked (not real) test connector, deterministic fake places
+  under country_code `ZZ`. Exists purely so the pipeline mechanics can be
+  proven end to end without fabricating real geographic data or
+  pre-empting the launch-market decision. Has a `poisoned=True` mode
+  (one impossible `sea_temp_c` reading) for the anomaly-blocking test.
+- `services/pipelines/flows/ingest.py` — real now: fetch/replay → S3
+  snapshot → parse → anomaly-check (halts before any DB write) → stage.
+  `replay_from=<snapshot_key>` re-runs from stored raw instead of the
+  live connector — the actual replay mechanism.
+- `services/pipelines/scripts/m2_check.py` — BUILD.md §15's own M2
+  acceptance test ("a pipeline run is fully replayable from raw and a bad
+  batch is blocked automatically"), run live. **Verified passing** against
+  a real local Postgres 16 + PostGIS 3 instance (schema loaded from the
+  actual production migration files — this also independently confirmed
+  the geography-type migration fix above is syntactically correct) and a
+  real S3-compatible endpoint (moto, for the local proof only). Not yet
+  run against *production* Postgres/S3 — that needs a MinIO resource
+  provisioned on Coolify and this service deployed there, both blocked
+  as of this note on the device-bridge connection to Zinerge's Mac
+  dropping mid-session. `services/web/app/page.tsx`'s M2 status reflects
+  this honestly as "in-progress," not "done."
+- `services/pipelines/Dockerfile` — builds this service the same way
+  `apps/web`'s Dockerfile does, for a future `roamola-pipelines` Coolify
+  resource on the same internal `coolify` network as
+  roamola-postgres/roamola-clickhouse/the not-yet-provisioned MinIO.
+
+**Still not done, still not fabricated:** `docs/SOURCES.md` is still
+empty. No real connector exists. `normalise.py` (entity resolution) and
+flows 4–9 are still stubs, correctly, since they depend on M3's templates
+or real published pages.
+
 ## Not blocking, just noted
 
 - `GENERATION_ENABLED` and `PUBLISH_ENABLED` default `false` everywhere,
