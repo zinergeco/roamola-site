@@ -38,16 +38,28 @@ What exists:
   writer behind `/api/events` and the system-check page; the `event` table
   is created (idempotently) on every container start too.
 - `packages/generation/` — the template-definition type, the reference
-  `destination` template, and the LLM-service contract (unimplemented
-  stubs past the type signatures — the actual prompt/validation logic is
-  M3 work, once there's real data to generate from).
+  `destination` template, and BUILD.md §7's gate engine (data-sufficiency
+  scoring, sibling-similarity check, prose-ratio check) — real and
+  unit-tested (`pnpm --filter @roamola/generation test`), proven end to
+  end against a synthetic fixture batch the same way M2's mechanics were
+  proven against `test_fixture.py`
+  (`pnpm --filter @roamola/generation m3:check`). The LLM-service contract
+  (`llm.ts`) is real except for the actual model call, left unimplemented
+  on purpose — wiring up a real provider is a deliberate, credentialed
+  decision not made yet, same category as `DATABASE_URL`/`S3_*` were for
+  M2. No real candidate data has been generated against yet:
+  `db-adapter.ts`'s Postgres queries are real and type-checked but
+  unexercised, since there's no real source data behind them
+  (`docs/SOURCES.md` is still empty, see below).
 - `packages/core/src/entitlements.ts` — the plan/entitlement table.
 - `services/pipelines/` — Python/Prefect. `ingest.py` and `validate.py`
   are real now (raw-to-S3 snapshot, replay from a stored snapshot,
   anomaly detection that halts a poisoned batch before it touches
-  Postgres) — see `services/pipelines/README.md`. Proven live against a
-  real Postgres+PostGIS instance and an S3-compatible store via
-  `scripts/m2_check.py`, BUILD.md's own M2 acceptance test. Only
+  Postgres) — see `services/pipelines/README.md`. Deployed as its own
+  Coolify resource (`roamola-pipelines`) and **verified live in
+  production**: `scripts/m2_check.py`, BUILD.md's own M2 acceptance
+  test, run directly on that container against real production
+  Postgres+PostGIS and MinIO (S3-compatible) — all 4 checks pass. Only
   connector is `test_fixture.py`, explicitly synthetic/not real — no
   real source exists yet (see below). The rest of the nine flows aren't
   started.
@@ -75,9 +87,13 @@ pnpm db:migrate
 ## Build order
 
 Do not reorder — BUILD.md §15 explains why each milestone depends on the
-last. M1 is complete and verified live (see `docs/DECISIONS.md`). M2 is
-in progress: the pipeline mechanics (ingest, snapshot, replay, anomaly
-blocking) are real and proven against real infra; the actual data-spine
-work — choosing launch markets, vetting and connecting real sources — has
-not started, on purpose (business decision, `docs/SOURCES.md` is still
-empty).
+last. M1 is complete and verified live (see `docs/DECISIONS.md`). M2's
+pipeline mechanics (ingest, snapshot, replay, anomaly blocking) are also
+now verified live in production (see `docs/DECISIONS.md`); the milestone
+itself stays "in progress" because the actual data-spine work — choosing
+launch markets, vetting and connecting real sources — has not started, on
+purpose (business decision, `docs/SOURCES.md` is still empty). M3's gate
+engine (data-sufficiency, differentiation, prose-ratio checks) is now real
+and tested the same way, ahead of schedule relative to M2 finishing —
+also blocked from going further by the same missing decision, since there
+is nothing real to run it against yet.

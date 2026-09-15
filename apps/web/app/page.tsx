@@ -25,14 +25,15 @@ const milestones: Milestone[] = [
     title: "Ingestion pipelines",
     status: "in-progress",
     detail:
-      "ingest/validate are real now (S3 snapshot, replay, anomaly-blocking), proven against a real Postgres+S3-compatible stack -- see services/pipelines/README.md. Still no real connector: docs/SOURCES.md is empty until launch markets are chosen (business decision, not fabricated).",
+      "ingest/validate are real and proven live in production: roamola-pipelines deployed on Coolify, scripts/m2_check.py run directly on that container against real production Postgres + MinIO -- all 4 checks pass (bucket ready, fresh ingest, replay-from-raw content-hash match, poisoned batch blocked). See docs/DECISIONS.md. Still no real connector: docs/SOURCES.md is empty until launch markets are chosen (business decision, not fabricated).",
   },
   {
     id: "M3",
     weeks: "9–12",
     title: "Template + generation system, destination pages live",
-    status: "not-started",
-    detail: "Template type + reference destination template defined; LLM-contract functions are unimplemented stubs.",
+    status: "in-progress",
+    detail:
+      "The gate engine (data-sufficiency scoring, sibling-similarity check, prose-ratio check -- BUILD.md §7) is real, unit-tested, and proven against a synthetic fixture batch, same pattern as M2. No real pages exist: the Postgres-backed candidate query is real but unexercised, and the model call in the LLM service is still unimplemented on purpose (a provider/cost decision, not made yet). See docs/DECISIONS.md.",
   },
   {
     id: "M4",
@@ -225,15 +226,16 @@ export default function HomePage() {
       </section>
 
       <section>
-        <h2 style={{ fontSize: "1.1rem", margin: "0 0 1rem" }}>Next up — M2 (data spine)</h2>
+        <h2 style={{ fontSize: "1.1rem", margin: "0 0 1rem" }}>Next up</h2>
         <ol style={{ color: "var(--mist)", fontSize: ".9rem", paddingLeft: "1.2rem" }}>
           <li style={{ marginBottom: ".4rem" }}>
             Choose 3–4 launch markets and populate <code>docs/SOURCES.md</code> —
-            business decision, not something to fabricate.
+            business decision, not something to fabricate. Both M2&apos;s pipeline
+            and M3&apos;s gate engine are built, tested, and waiting on this.
           </li>
-          <li style={{ marginBottom: ".4rem" }}>Build the ingest/normalise/validate pipeline for geographic, regulatory and climate sources.</li>
-          <li style={{ marginBottom: ".4rem" }}>Raw snapshotting to S3, with replay proven by re-running a past date.</li>
-          <li>Anomaly detection that halts a deliberately poisoned test batch.</li>
+          <li style={{ marginBottom: ".4rem" }}>Build the first real connector against a vetted, licensed source once markets are chosen.</li>
+          <li style={{ marginBottom: ".4rem" }}>Wire up a real model provider for the LLM service (a deliberate cost/infra decision) once there&apos;s real data to generate from.</li>
+          <li>200-page pilot, 100% reviewed, per M3&apos;s BUILD.md §15 done-when.</li>
         </ol>
       </section>
     </main>

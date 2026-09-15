@@ -240,6 +240,150 @@ mechanism note above; this session's sandbox can't push directly, so
 that's Zinerge's step), so `m2_check.py` hasn't been run against this real
 MinIO yet. That's the next concrete step once the push lands.
 
+## M2 verified live in production (2026-09-15)
+
+Once the push landed, `roamola-pipelines` was deployed as its own Coolify
+resource and `scripts/m2_check.py` was run directly on that container
+against real production Postgres+PostGIS and MinIO -- not local/moto
+proxies. **All 4 checks pass:**
+
+- `[PASS]` raw-snapshot bucket exists (S3-compatible, real MinIO)
+- `[PASS]` fresh ingest of the `test-fixture` connector (3 places, 4
+  signals staged into real Postgres)
+- `[PASS]` replay of that same run from its raw S3 snapshot -- content
+  hash matches, 4 fresh signal rows appended (signal is append-only; a
+  replay is a new observation, not a dedupe) -- this is BUILD.md's M2
+  "replayable from raw" criterion, proven live
+- `[PASS]` a deliberately poisoned batch (`impossible_temp` rule,
+  `sea_temp_c=150.0` outside `(-50, 60)`) correctly halted before
+  touching Postgres -- the "bad batch is blocked automatically" half of
+  the same criterion
+
+Overall: **PASS -- M2 done-when condition satisfied**, live, in
+production.
+
+Setup notes, for the record:
+
+- **Resource config**: "Git Repository (with GitHub App)" via the same
+  `turing-minds-uk` App `roamola-site` already uses, Dockerfile build
+  strategy, base directory `/services/pipelines`, on the shared `coolify`
+  network (application-type resources join it automatically, unlike
+  Compose services which need the explicit toggle). No public port --
+  the container sits idle (`CMD sleep infinity`) and flows are run on
+  demand via Coolify's Terminal feature, same as this verification run.
+- **Env vars**: `DATABASE_URL`, `S3_ENDPOINT`, `S3_BUCKET`,
+  `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`. The S3 vars were correct on
+  the first attempt. `DATABASE_URL` took three attempts to land correctly
+  -- Coolify's masked per-row env-var edit field turned out to be
+  unreliable for this: a JS-driven edit read back correctly in the DOM
+  and produced a "Success" toast, but didn't actually propagate to the
+  container on Restart *or* Redeploy (silently kept serving the old
+  value). The fix was a real-keystroke edit -- clear the field
+  completely first, retype, verify via read-only inspection, save, then
+  **Redeploy** (not Restart -- Restart reuses the existing container and
+  its baked-in env; only Redeploy recreates it with current values).
+  Worth remembering for any future masked-field env var edit in Coolify.
+- This mirrors the M1 incident's lesson from the same masked-input class
+  of bug (see above) -- confirms it's a general Coolify UI quirk, not a
+  one-off.
+
+**Still not done, still not fabricated:** `docs/SOURCES.md` is still
+empty, no real connector exists, and `normalise.py` plus flows 4-9 remain
+stubs. M2 the *milestone* (real sources, real launch markets) is not
+done; M2 the *mechanics* (BUILD.md's actual "done when" acceptance test)
+now is, live, per the run above. `apps/web/app/page.tsx` reflects this
+distinction rather than collapsing it.
+
+## M3 gate engine built and tested (2026-09-15)
+
+Same division as M2: build and prove the *mechanics* against a synthetic
+fixture while the *milestone* itself (200 real pages live) stays blocked
+on the same unmade business decision (launch markets, `docs/SOURCES.md`).
+BUILD.md §7 calls this gate engine "the most important subsystem in the
+build" and says to implement it before any template -- that's what this
+entry covers, in `packages/generation/`:
+
+- `src/completeness.ts` -- BUILD.md §7.3's `scoreCompleteness`, with its
+  three undefined helper predicates (`belowMinObservations`,
+  `staleBeyond`, the unique-data penalty) actually implemented, not
+  restated as pseudocode. Pure function, no I/O.
+- `src/similarity.ts` -- Gate 2 (differentiation). BUILD.md's own
+  pseudocode says "embeddings, cosine"; this is deliberately NOT real
+  embeddings -- a real embedding call is the same category of deliberate,
+  credentialed infrastructure decision `DATABASE_URL`/`S3_*` were for M2,
+  not something to do implicitly while building the gate that consumes
+  it. What's here is a real, deterministic bag-of-words term-frequency
+  cosine over each draft's `interpretation` block (the one block that's
+  ever LLM-written) -- correctly catches near-duplicate boilerplate, and
+  is swappable for a real embeddings call later without changing
+  `pipeline.ts`'s call signature.
+- `src/prose.ts` -- the prose-ratio check: interpretation word count as a
+  share of the draft's total word count.
+- `src/pipeline.ts` -- `runGates` (the three gates, in order, pure) and
+  `generateBatch` (the real BUILD.md §7.2 entrypoint: checks
+  `GENERATION_ENABLED` and `GENERATION_DAILY_CAP` unconditionally first,
+  fails closed with neither set, and enforces §7.5's release-stage publish
+  cap with no override, exactly as specified).
+- `src/llm.ts` -- `buildPrompt`, `hashPrompt`, and
+  `checkClaimsAgainstFacts` are now real. The last of those is, in the
+  module's own words, "the single most safety-critical piece of code in
+  the generation package" (BUILD.md §14's protected contract test: *LLM
+  output contains no claim absent from `facts`*) -- implemented as a
+  numeric-token extraction and cross-check against the supplied facts:
+  deliberately conservative (a correct derived number can false-positive),
+  which is the right failure direction for a grounding check.
+  `callModel()` stays unimplemented, on purpose -- see below.
+- `src/db-adapter.ts` -- a real, type-checked Postgres-backed
+  `findDestinationCandidates` (queries `place`/`signal`/`property`,
+  computes each candidate's field observations and counts) and
+  `persistDraft`/`publishedThisMonth` against the real `page` table.
+  **Not run live** -- doing so would write `page` rows for a template
+  with zero real underlying source data, which is exactly what BUILD.md
+  §0 rule 2 exists to prevent ("no orphan data enters the graph").
+  `persistRollup` is a real, callable no-op: BUILD.md §7.2's "becomes a
+  row on the parent page instead" has no parent page to attach to yet,
+  since none has ever been generated.
+- `src/fixtures/test-fixture.ts` -- synthetic destination candidates
+  (slug prefix `test-`, `ZZ` country code, same convention as
+  `services/pipelines/connectors/test_fixture.py`), covering: a
+  sufficient candidate, one below `minObservations` on two fields, one
+  penalised by the unique-data check, and matching renderers for
+  distinct/boilerplate/prose-heavy drafts. It exercises the real, shipped
+  `destination` template object, not a copy of it.
+- `scripts/m3_check.ts` -- the TypeScript-side counterpart to
+  `m2_check.py`: same console PASS/FAIL banner shape, runs the fixture
+  batch through `runGates` and proves all five cases (two rollup reasons,
+  a clean mixed-batch split, Gate 2 rejecting boilerplate, the prose-ratio
+  gate rejecting an over-prose draft). **Run live, in this sandbox** (no
+  Postgres or Coolify needed -- this proof is pure logic, unlike M2's,
+  which needed real infra): `PASS -- gate engine behaves per BUILD.md
+  §7.2 on every case`.
+- 42 Vitest unit/contract tests across `completeness`, `similarity`,
+  `prose`, `pipeline`, `define`, and `llm` -- including BUILD.md §14's two
+  protected tests by name: `regulatory templates have reviewSampleRate
+  === 1.0` and `LLM output contains no claim absent from facts`. All
+  passing (`pnpm --filter @roamola/generation test`), and
+  `pnpm --filter @roamola/generation typecheck` is clean.
+
+**Drive-by fix, unrelated to M3 itself:** `packages/db`'s own `typecheck`
+script was already broken (`tsc --noEmit` failed on `process` with no
+`@types/node`) before any of this work started -- caught by running
+`pnpm -r typecheck` to confirm nothing here broke anything else. Added
+`@types/node` to `packages/db` (matching the version `apps/web` already
+uses) rather than leaving it red. `apps/admin` still has no `tsconfig.json`
+at all and its `typecheck` script does nothing -- left alone; it's a
+vestigial scaffold from before the M1 decision to build the admin shell
+into `apps/web` instead (see `decisionsConfirmed` in `page.tsx`), not
+something this session's scope should touch.
+
+**Still not done, still not fabricated:** `docs/SOURCES.md` is still
+empty, no real connector exists, and `callModel()` in `llm.ts` is still
+unimplemented (a model-provider decision, not made). M3 the *milestone*
+("200 pages live, 100% reviewed") is not done and can't be until real
+source data exists; M3's gate engine is real and proven the way M2's
+pipeline mechanics were. `apps/web/app/page.tsx`'s M3 status reflects
+this as "in-progress," the same distinction M2 draws.
+
 ## Not blocking, just noted
 
 - `GENERATION_ENABLED` and `PUBLISH_ENABLED` default `false` everywhere,

@@ -7,7 +7,15 @@ template is added.
 ## destination
 
 - File: `packages/generation/src/templates/destination.ts`
-- Status: defined (M1 scaffold), not yet wired to real data
+- Status: definition unchanged since M1; the *gate engine* that consumes
+  it (`packages/generation/src/{completeness,similarity,prose,pipeline}.ts`)
+  is now real and unit-tested (`pnpm --filter @roamola/generation test`)
+  and proven end to end against a synthetic fixture batch
+  (`pnpm --filter @roamola/generation m3:check`, mirroring
+  `services/pipelines/scripts/m2_check.py`). Not yet wired to real data --
+  `db-adapter.ts`'s `findDestinationCandidates` is real, type-checked
+  Postgres-backed code but has not been run live, since there is no real
+  source data behind it yet (`docs/SOURCES.md` is still empty).
 - Pattern: `{city}` — master plan §7 estimates ~6,000 realistic pages
 - Gate thresholds: `minCompleteness 0.72`, `maxSiblingSimilarity 0.70`,
   `maxProseWordShare 0.40`, `reviewSampleRate 0.05`
