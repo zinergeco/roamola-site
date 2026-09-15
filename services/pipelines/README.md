@@ -56,3 +56,15 @@ flows are run on demand inside it via Coolify's terminal, the same way
 `container-init.mjs`'s migration step and the admin routes run inside the
 `apps/web` container rather than from an outside client with no route to
 the internal `coolify` Docker network.
+
+**MinIO is provisioned and real** (2026-09-15, `roamola-minio` Coolify
+Compose service — see `docs/DECISIONS.md`). `S3_ENDPOINT` in
+`.env.example` is the verified internal hostname; `S3_ACCESS_KEY_ID`/
+`S3_SECRET_ACCESS_KEY` are the service's `MINIO_ROOT_USER`/
+`MINIO_ROOT_PASSWORD` (shared with Zinerge in chat, not committed).
+`roamola-pipelines` itself is not deployed yet — that needs the
+`93cb1ae` commit pushed to `main` first — so `m2_check.py` has not yet
+run against this real MinIO/production Postgres. That's the next step
+once the push lands: deploy this Dockerfile as its own Coolify resource
+on the `coolify` network, then run `m2_check.py` inside it via Coolify's
+terminal, mirroring how `/admin/system-check` proved M1 live.

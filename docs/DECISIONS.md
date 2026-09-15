@@ -184,6 +184,62 @@ empty. No real connector exists. `normalise.py` (entity resolution) and
 flows 4–9 are still stubs, correctly, since they depend on M3's templates
 or real published pages.
 
+## MinIO provisioned (2026-09-15)
+
+Real Coolify resource, not a placeholder:
+
+- **Type: Docker Compose service, not "Docker Image."** Coolify's plain
+  "Docker Image" application type has no field to set a container start
+  command -- confirmed by inspecting its Livewire fields
+  (`customDockerRunOptions` only supports docker-run *options* like
+  `--entrypoint`, never a trailing command/args), and MinIO's official image
+  requires an explicit `server /data --console-address ":9001"` command or
+  it exits immediately. Deleted the half-configured "Docker Image" attempt
+  and recreated as a one-service "Docker Compose (Empty)" resource instead,
+  which Coolify auto-recognised as a MinIO template (it generated
+  "MinIO · Admin User/Password" fields from the `MINIO_ROOT_USER`/
+  `MINIO_ROOT_PASSWORD` compose env vars).
+- **Image: `quay.io/minio/minio:latest`, not `minio/minio`.** Docker Hub's
+  `minio/minio` (and `minio/mc`) now refuses anonymous pulls -- MinIO Inc.
+  discontinued that distribution channel at some point after this
+  environment's training cutoff; first deploy attempt failed with
+  `pull access denied for minio/minio, repository does not exist or may
+  require 'docker login'`. `quay.io/minio/minio` is the current official
+  home (confirmed via several other projects' 2026 migration PRs). Worth
+  remembering for any future MinIO/mc image reference in this repo.
+- **Network: "Connect to the predefined Coolify network"** (a toggle
+  Coolify exposes for Compose-based services, separate from anything
+  declared inside the compose file itself) -- puts it on the same
+  `coolify` network as roamola-postgres/clickhouse/redis/site.
+- **Internal hostname is *not* the service name.** Verified empirically
+  from inside the roamola-site container (Coolify's per-app Terminal):
+  `roamola-minio` does not resolve (`wget: bad address`), but the
+  Docker-assigned `container_name` does --
+  `roamola-minio-i8gdnlavccngszyuzytx7bfl` resolves via `getent hosts` and
+  `GET /minio/health/live` on port 9000 returns a real `200 OK` /
+  `Server: MinIO` response. Coolify names Compose containers
+  `<service>-<resource-uuid>`, not just `<service>`, unlike its native
+  Database resources (roamola-postgres et al., which do get the plain
+  resource name as hostname). `.env.example`'s `S3_ENDPOINT` is set to
+  this verified hostname.
+- **Credentials:** `MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` set as the
+  service's env vars (Coolify's generated "MinIO · Admin User/Password"
+  fields); a fresh random password, shared with Zinerge directly in chat
+  the same way `DEV_ACCESS_PASSWORD` was -- not written to any file or to
+  memory.
+- **Storage:** a real named Docker volume (`..._minio-data` → `/data`),
+  durable across redeploys, same pattern as the Postgres/ClickHouse data
+  volumes.
+- Bucket (`roamola-raw`) is not created manually -- `lib/snapshot.py`'s
+  `ensure_bucket()` creates it on first real run, same as the local/moto
+  proof already showed.
+
+Not yet done: `roamola-pipelines` itself isn't deployed as a Coolify
+resource yet (blocked on the `93cb1ae` commit being pushed -- see the push
+mechanism note above; this session's sandbox can't push directly, so
+that's Zinerge's step), so `m2_check.py` hasn't been run against this real
+MinIO yet. That's the next concrete step once the push lands.
+
 ## Not blocking, just noted
 
 - `GENERATION_ENABLED` and `PUBLISH_ENABLED` default `false` everywhere,
